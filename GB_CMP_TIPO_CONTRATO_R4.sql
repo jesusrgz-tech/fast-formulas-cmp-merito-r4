@@ -1,5 +1,5 @@
 /******************************************************************************
-* FORMULA NAME      : GB_CMP_TIPO_CONTRATO                               *
+* FORMULA NAME      : GB_CMP_TIPO_CONTRATO_R4                               *
 * FORMULA TYPE      : Compensation Default and Override                       *
 * DESCRIPTION       : Obtiene el texto del rango de incremento por merito     *
 *                     leyendo directamente desde UDT GB_CMP_RANGOS_MERITO     *

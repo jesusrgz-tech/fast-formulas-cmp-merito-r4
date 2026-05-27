@@ -1,6 +1,6 @@
 /******************************************************************************
 * *
-* FORMULA NAME      : GB_CMP_ELEGIBILIDAD_CH                                  *
+* FORMULA NAME      : GB_CMP_ELEGIBILIDAD_R4                                  *
 * FORMULA TYPE      : Participation and Rate Eligibility                      *
 * DESCRIPTION       : Elegibilidad para Brasil. Incluye solo colaboradores    *
 *                     con nivel 4 en adelante                                  
@@ -38,7 +38,7 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = ELIG_DATE)
         MGR_LVL_NUM = TO_NUM(MGR_LVL)
 )
 
-IF MGR_LVL_NUM >= 5 THEN
+IF MGR_LVL_NUM >= 4 THEN
     ELIGIBLE = 'Y'
 L_LOG = SET_LOG ('Debuguea: ' || TO_CHAR(MGR_LVL_NUM ))
 

@@ -1,5 +1,5 @@
 /******************************************************************************
-* FORMULA NAME      : GB_CMP_INCRM_MERITO_MIN                                 *
+* FORMULA NAME      : GB_CMP_INCRM_MERITO_MIN_R4                                 *
 * FORMULA TYPE      : Compensation Default and Override                       *
 * DESCRIPTION       : Obtiene el porcentaje minimo de incremento por merito   *
 *                     de forma dinamica desde UDT GB_CMP_RANGOS_MERITO.       *

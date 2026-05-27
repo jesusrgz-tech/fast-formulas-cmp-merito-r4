@@ -1,6 +1,6 @@
 /******************************************************************************
 * *
-* FORMULA NAME      : GB_CMP_APERTURA_CH                                      *
+* FORMULA NAME      : GB_CMP_APERTURA_R4                                      *
 * FORMULA TYPE      : Compensation Default and Override                       *
 * DESCRIPTION       : Calcula la apertura del colaborador para Region 4       *
 * Fórmula: ((Sueldo - Min) / ((Max - Min) / 30)) + 70     *
