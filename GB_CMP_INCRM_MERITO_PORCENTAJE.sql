@@ -1,5 +1,5 @@
 /******************************************************************************
-* FORMULA NAME      : GB_CMP_INCRM_MERITO_PORCENTAJE                          *
+* FORMULA NAME      : GB_CMP_INCRM_MERITO_PORCENTAJE                     *
 * FORMULA TYPE      : Compensation Default and Override                       *
 * DESCRIPTION       : Obtiene el porcentaje promedio de incremento por merito *
 *                     desde UDT GB_INCREMENTO_MERITO para R4 (Espana,         *

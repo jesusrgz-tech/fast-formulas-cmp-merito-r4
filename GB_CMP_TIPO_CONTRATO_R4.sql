@@ -1,18 +1,22 @@
 /******************************************************************************
 * FORMULA NAME      : GB_CMP_TIPO_CONTRATO_R4                               *
 * FORMULA TYPE      : Compensation Default and Override                       *
-* DESCRIPTION       : Obtiene el texto del rango de incremento por merito     *
-*                     leyendo directamente desde UDT GB_CMP_RANGOS_MERITO     *
+* DESCRIPTION       : Retorna el tipo de contrato del colaborador.            *
+*                     1 = Permanente, 2 = No permanente.                      *
+*                     Lee PER_ASG_ATTRIBUTE1 sin dependencia de region.       *
 *-----------------------------------------------------------------------------*
 * CREATED BY        : IT-GLOBAL                                               *
 * CREATION DATE     : 07-Abril-2026                                           *
-* LAST UPDATE DATE  : 27-Abril-2026                                           *
+* LAST UPDATE DATE  : 27-Mayo-2026                                            *
 *-----------------------------------------------------------------------------*
 * Change History:                                                             *
 * Author          | Date            | Ver | Comments                          *
 *-----------------+-----------------+-----+-----------------------------------*
 * IT Global       | 15-Abril-2026   |  1  | Version Inicial                   *
 * IT Global       | 21-Abril-2026   |  2  | Reestructura dinamica UDT         *
+* IT Global       | 27-Mayo-2026    |  3  | Validacion R4: sin cambios        *
+*                 |                 |     | funcionales, logica agnostica     *
+*                 |                 |     | a region                          *
 ******************************************************************************/
 
 INPUTS ARE CMP_IV_PLAN_START_DATE (text),
@@ -24,7 +28,7 @@ DEFAULT FOR PER_ASG_ATTRIBUTE1 IS 'PERMANENTE'
 
 HR_EXTRACT_DATE = TO_DATE(CMP_IV_PLAN_EXTRACTION_DATE, 'YYYY/MM/DD')
 
-l_log = SET_LOG('*** INICIO GB_CMP_TIPO_CONTRATO ***')
+l_log = SET_LOG('*** INICIO GB_CMP_TIPO_CONTRATO_R4 ***')
 
 /***** TIPO DE CONTRATO *****/
 CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE)
