@@ -2,14 +2,16 @@
 * FORMULA NAME      : GB_CMP_INCRM_MERITO_RANGO_R4                               *
 * FORMULA TYPE      : Compensation Default and Override                       *
 * DESCRIPTION       : Obtiene el texto del rango de incremento por merito     *
-*                     leyendo directamente desde UDT GB_CMP_RANGOS_MERITO.    *
-*                     La deteccion de Promotion se realiza mediante          *
-*                     recorrido historico de PER_ASG_JOB_MANAGER_LEVEL        *
-*                     dentro de la ventana de 5 meses previa al fin del plan *
+*                     para R4 (Espana, Portugal, Marruecos) leyendo desde     *
+*                     UDT por idioma: GB_CMP_ES_PT_RANGOS_MERITO o            *
+*                     GB_CMP_MAR_RANGOS_MERITO. Key por pais derivada del     *
+*                     Legal Employer. Deteccion de Promotion por recorrido    *
+*                     historico de PER_ASG_JOB_MANAGER_LEVEL en ventana       *
+*                     de 5 meses previa al fin del plan.                      *
 *-----------------------------------------------------------------------------*
 * CREATED BY        : IT-GLOBAL                                               *
 * CREATION DATE     : 07-Abril-2026                                           *
-* LAST UPDATE DATE  : 14-Mayo-2026                                            *
+* LAST UPDATE DATE  : 28-Mayo-2026                                            *
 *-----------------------------------------------------------------------------*
 * Change History:                                                             *
 * Author          | Date            | Ver | Comments                          *
@@ -18,6 +20,15 @@
 * IT Global       | 21-Abril-2026   |  2  | Reestructura dinamica UDT         *
 * IT Global       | 14-Mayo-2026    |  3  | Replica logica retrofit promotion *
 *                 |                 |     | por recorrido historico de nivel  *
+* IT Global       | 27-Mayo-2026    |  4  | Adaptacion R4: key por pais       *
+*                 |                 |     | MOR/ESP/PT desde Legal Employer,  *
+*                 |                 |     | correccion UDT calificac por      *
+*                 |                 |     | idioma, fix tab en WithoutEval    *
+* IT Global       | 28-Mayo-2026    |  5  | Correccion UDT rangos por idioma: *
+*                 |                 |     | GB_CMP_ES_PT_RANGOS_MERITO y      *
+*                 |                 |     | GB_CMP_MAR_RANGOS_MERITO;         *
+*                 |                 |     | correccion UDT calificac ES_PT    *
+*                 |                 |     | a GB_CMP_ES_PT_CALIFICAC_MERITO   *
 ******************************************************************************/
 
 INPUTS ARE CMP_IV_PLAN_START_DATE (text),
@@ -40,6 +51,7 @@ DEFAULT FOR PER_ASG_JOB_MANAGER_LEVEL IS 'NA'
 DEFAULT FOR PER_ASG_GRADE_ID IS 123
 DEFAULT FOR PER_ASG_PERSON_ID IS 0
 DEFAULT FOR CMP_ASSIGNMENT_SALARY_AMOUNT IS 0
+DEFAULT FOR PER_ASG_ORG_LEGAL_EMPLOYER_NAME IS 'N/LE'
 
 /*============================================================================
   FECHAS BASE
@@ -47,22 +59,37 @@ DEFAULT FOR CMP_ASSIGNMENT_SALARY_AMOUNT IS 0
 HR_EXTRACT_DATE = TO_DATE(CMP_IV_PLAN_EXTRACTION_DATE, 'YYYY/MM/DD')
 L_PL_END_DATE   = TO_DATE(CMP_IV_PLAN_END_DATE, 'YYYY/MM/DD')
 
-l_log = SET_LOG('*** INICIO GB_CMP_INCRM_MERITO_RANGO ***')
+l_log = SET_LOG('*** INICIO GB_CMP_INCRM_MERITO_RANGO_R4 ***')
 L_ASG_ID = CMP_IVR_ASSIGNMENT_ID[1]
 l_log = SET_LOG('Assignment ID: ' || TO_CHAR(L_ASG_ID))
 
 /*============================================================================
-  PROMEDIO BR
-  Se obtiene el incremento promedio desde GB_INCREMENTO_MERITO_V2
-  para la clave BR
+  LEGAL EMPLOYER Y KEY UDT POR PAIS
 ============================================================================*/
-L_PROM = TO_NUMBER(GET_TABLE_VALUE('GB_INCREMENTO_MERITO_V2', 'Incremento_Promedio', 'CH'))
-l_log = SET_LOG('Promedio BR: ' || TO_CHAR(L_PROM))
+CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE)
+(
+    L_LEGAL_EMPLOYER = PER_ASG_ORG_LEGAL_EMPLOYER_NAME
+)
+
+l_log = SET_LOG('Legal Employer: ' || L_LEGAL_EMPLOYER)
+
+IF L_LEGAL_EMPLOYER = 'Bimbo Morocco, S.A.R.L.A.U.' THEN
+    L_KEY_PAIS = 'MOR'
+ELSE IF L_LEGAL_EMPLOYER = 'Bimbo Donuts Portugal, LDA' THEN
+    L_KEY_PAIS = 'PT'
+ELSE
+    L_KEY_PAIS = 'ESP'
+
+l_log = SET_LOG('Key pais UDT: ' || L_KEY_PAIS)
+
+/*============================================================================
+  PROMEDIO POR PAIS
+============================================================================*/
+L_PROM = TO_NUMBER(GET_TABLE_VALUE('GB_INCREMENTO_MERITO', 'Incremento_Promedio', L_KEY_PAIS))
+l_log = SET_LOG('Promedio: ' || TO_CHAR(L_PROM))
 
 /*============================================================================
   EVALUACION
-  Se recorre el historial de datos externos con tipo CMP_MERITO
-  y se mapea el valor numerico a texto usando GB_CMP_CALIFICAC_MERITO
 ============================================================================*/
 L_EVAL_TXT    = 'N/A'
 L_EVAL_MAPPED = 'N/A'
@@ -76,7 +103,11 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE, COMPENSATION_RECORD_TYPE = 'CM
         L_EXT_VAL = CMP_EXTERNAL_WORKER_DATA_RGE_ASG_VALUE1[L_IDX]
         IF L_EXT_VAL != 'N/A' THEN
         (
-            L_EVAL_MAPPED = GET_TABLE_VALUE('GB_CMP_CALIFICAC_MERITO', 'Calificacion_Texto', L_EXT_VAL)
+            IF L_KEY_PAIS = 'MOR' THEN
+                L_EVAL_MAPPED = GET_TABLE_VALUE('GB_CMP_MAR_CALIFICAC_MERITO', 'Calificacion_Texto', L_EXT_VAL)
+            ELSE
+                L_EVAL_MAPPED = GET_TABLE_VALUE('GB_CMP_CALIFICAC_MERITO', 'Calificacion_Texto', L_EXT_VAL)
+
             IF L_EVAL_MAPPED != 'N/A' THEN
             (
                 L_EVAL_TXT = L_EVAL_MAPPED
@@ -93,9 +124,6 @@ l_log = SET_LOG('Evaluacion: ' || L_EVAL_TXT)
 
 /*============================================================================
   DATOS DEL ASSIGNMENT
-  Se obtienen tipo de contrato, action code, fecha de contratacion,
-  grado, sueldo, person ID y nivel de manager con contexto a la fecha
-  de extraccion
 ============================================================================*/
 CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE)
 (
@@ -119,8 +147,6 @@ l_log = SET_LOG('Manager Level actual: ' || MGR_LVL)
 
 /*============================================================================
   CALCULO APERTURA
-  Se obtienen min y max del plan salarial via Value Sets y se calcula
-  la apertura del empleado respecto a su banda salarial
 ============================================================================*/
 L_PARAM_PER = '|=PERSON_ID=' || TO_CHAR(L_PER_ID)
 L_RATE_ID   = TO_NUM(GET_VALUE_SET('GB_CMP_ASG_RATE_ID', L_PARAM_PER))
@@ -154,11 +180,6 @@ l_log = SET_LOG('Apertura calculada: ' || TO_CHAR(L_APERTURA))
 
 /*============================================================================
   DETECCION DE PROMOCION POR RETROFIT
-  Se replica la logica de GB_CMP_PROMOTION_RETROFIT_MERITO:
-  ventana de 5 meses previa a la fecha fin del plan, recorrido del
-  historial de assignments comparando manager level actual vs previo.
-  Solo se marca PRO cuando hay incremento real de nivel ascendente
-  dentro de la ventana.
 ============================================================================*/
 PROMOTION_START_DATE = ADD_MONTHS(L_PL_END_DATE, -5)
 PROMOTION_END_DATE   = HR_EXTRACT_DATE
@@ -223,8 +244,6 @@ l_log = SET_LOG('PRO flag: '              || PRO)
 
 /*============================================================================
   CONDICION
-  Se determina la condicion del empleado en orden de prioridad:
-  Promotion (solo si PRO = 'PRO'), NewHire, NonPerm o None
 ============================================================================*/
 L_CINCO_MESES = ADD_MONTHS(L_PL_END_DATE, -5)
 
@@ -241,8 +260,6 @@ l_log = SET_LOG('Condicion: ' || L_CONDICION)
 
 /*============================================================================
   CONSTRUCCION DE CLAVE UDT
-  Se construye la clave dinamica que se usara para consultar
-  GB_CMP_RANGOS_MERITO segun condicion, evaluacion y apertura
 ============================================================================*/
 IF L_CONDICION = 'Promotion' THEN
     L_CLAVE = 'Promotion'
@@ -251,7 +268,7 @@ ELSE IF L_CONDICION = 'NonPerm' THEN
 ELSE IF L_CONDICION = 'NewHire' THEN
     L_CLAVE = 'NewHire'
 ELSE IF L_EVAL_TXT = 'N/A' THEN
-    L_CLAVE = '	WithoutEval'
+    L_CLAVE = 'WithoutEval'
 ELSE IF L_EVAL_TXT = 'Exit' THEN
     L_CLAVE = 'Exit'
 ELSE IF L_EVAL_TXT = 'Needs Improvement' THEN
@@ -266,11 +283,12 @@ ELSE
 l_log = SET_LOG('Clave UDT: ' || L_CLAVE)
 
 /*============================================================================
-  LECTURA UDT
-  Se obtiene el texto del rango directamente desde GB_CMP_RANGOS_MERITO
-  usando la clave construida
+  LECTURA UDT POR IDIOMA
 ============================================================================*/
-L_RANGO_OUTPUT = GET_TABLE_VALUE('GB_CMP_RANGOS_MERITO', 'Texto_Rango', L_CLAVE)
+IF L_KEY_PAIS = 'MOR' THEN
+    L_RANGO_OUTPUT = GET_TABLE_VALUE('GB_CMP_MAR_RANGOS_MERITO', 'Texto_Rango', L_CLAVE)
+ELSE
+    L_RANGO_OUTPUT = GET_TABLE_VALUE('GB_CMP_RANGOS_MERITO', 'Texto_Rango', L_CLAVE)
 
 l_log = SET_LOG('*** RESULTADO RANGO: ' || L_RANGO_OUTPUT || ' ***')
 RETURN L_RANGO_OUTPUT
