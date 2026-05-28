@@ -1,6 +1,6 @@
 /******************************************************************************
 * *
-* FORMULA NAME      : GB_CMP_INC_PLAN_SALARIAL_PCT_R4
+* FORMULA NAME      : GB_CMP_INC_PLAN_SALARIAL_PCT
 * FORMULA TYPE      : Compensation Default and Override
 * DESCRIPTION       : Retorna el porcentaje de incremento del plan salarial
 *                     para R4 (Espana, Portugal, Marruecos) desde UDT
