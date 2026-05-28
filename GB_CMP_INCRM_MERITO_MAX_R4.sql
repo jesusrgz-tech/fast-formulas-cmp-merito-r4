@@ -96,7 +96,7 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE, COMPENSATION_RECORD_TYPE = 'CM
             IF L_KEY_PAIS = 'MOR' THEN
                 L_EVAL_MAPPED = GET_TABLE_VALUE('GB_CMP_MAR_CALIFICAC_MERITO', 'Calificacion_Texto', L_EXT_VAL)
             ELSE
-                L_EVAL_MAPPED = GET_TABLE_VALUE('GB_CMP_ES_PT_CALIFICAC_MERITO', 'Calificacion_Texto', L_EXT_VAL)
+                L_EVAL_MAPPED = GET_TABLE_VALUE('GB_CMP_CALIFICAC_MERITO', 'Calificacion_Texto', L_EXT_VAL)
 
             IF L_EVAL_MAPPED != 'N/A' THEN
             (
