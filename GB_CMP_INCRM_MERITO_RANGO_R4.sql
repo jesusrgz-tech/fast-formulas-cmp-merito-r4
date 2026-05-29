@@ -286,7 +286,7 @@ l_log = SET_LOG('Clave UDT: ' || L_CLAVE)
   LECTURA UDT POR IDIOMA
 ============================================================================*/
 IF L_KEY_PAIS = 'MOR' THEN
-    L_RANGO_OUTPUT = GET_TABLE_VALUE('GB_CMP_MAR_RANGOS_MERITO', 'Texto_Rango', L_CLAVE)
+    L_RANGO_OUTPUT = GET_TABLE_VALUE('GB_CMP_MAR_RANGOS_MERITO_V2', 'Text_Range', L_CLAVE)
 ELSE
     L_RANGO_OUTPUT = GET_TABLE_VALUE('GB_CMP_RANGOS_MERITO', 'Texto_Rango', L_CLAVE)
 

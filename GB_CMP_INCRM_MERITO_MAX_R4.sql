@@ -3,12 +3,13 @@
 * FORMULA TYPE      : Compensation Default and Override                       *
 * DESCRIPTION       : Obtiene el porcentaje maximo de incremento por merito   *
 *                     para R4 (Espana, Portugal, Marruecos) de forma dinamica *
-*                     desde UDT GB_CMP_RANGOS_MERITO. Promedio e inflacion    *
+*                     desde UDT por idioma: GB_CMP_RANGOS_MERITO (ES/PT) o   *
+*                     GB_CMP_MAR_RANGOS_MERITO_V2 (MOR). Promedio e inflacion *
 *                     se obtienen desde GB_INCREMENTO_MERITO por pais.        *
 *-----------------------------------------------------------------------------*
 * CREATED BY        : IT-GLOBAL                                               *
 * CREATION DATE     : 07-Abril-2026                                           *
-* LAST UPDATE DATE  : 27-Mayo-2026                                            *
+* LAST UPDATE DATE  : 29-Mayo-2026                                            *
 *-----------------------------------------------------------------------------*
 * Change History:                                                             *
 * Author          | Date            | Ver | Comments                          *
@@ -17,6 +18,10 @@
 * IT Global       | 21-Abril-2026   |  2  | Reestructura dinamica UDT         *
 * IT Global       | 27-Mayo-2026    |  3  | Adaptacion R4: key por pais       *
 *                 |                 |     | MOR/ESP/PT desde Legal Employer   *
+* IT Global       | 29-Mayo-2026    |  4  | Construccion clave en mayusculas  *
+*                 |                 |     | para MOR; lectura UDT por idioma  *
+*                 |                 |     | GB_CMP_MAR_RANGOS_MERITO_V2 vs    *
+*                 |                 |     | GB_CMP_RANGOS_MERITO              *
 ******************************************************************************/
 
 INPUTS ARE CMP_IV_PLAN_START_DATE (text),
@@ -128,11 +133,11 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE)
     ASSIGN_END_DATE    = PER_ASG_EFFECTIVE_END_DATE
 )
 
-l_log = SET_LOG('Tipo contrato: ' || L_TIPO_CONTRATO)
-l_log = SET_LOG('Action code: '   || L_ACTION)
-l_log = SET_LOG('Hire Date: '     || TO_CHAR(L_HIRE_DATE, 'YYYY/MM/DD'))
-l_log = SET_LOG('Grade ID: '      || TO_CHAR(L_GRADE))
-l_log = SET_LOG('Sueldo: '        || TO_CHAR(L_SUELDO))
+l_log = SET_LOG('Tipo contrato: '        || L_TIPO_CONTRATO)
+l_log = SET_LOG('Action code: '          || L_ACTION)
+l_log = SET_LOG('Hire Date: '            || TO_CHAR(L_HIRE_DATE, 'YYYY/MM/DD'))
+l_log = SET_LOG('Grade ID: '             || TO_CHAR(L_GRADE))
+l_log = SET_LOG('Sueldo: '               || TO_CHAR(L_SUELDO))
 l_log = SET_LOG('Manager Level Actual: ' || MGR_LVL)
 
 /*============================================================================
@@ -251,32 +256,76 @@ l_log = SET_LOG('Condicion: ' || L_CONDICION)
 /*============================================================================
   CONSTRUCCION DE CLAVE UDT
 ============================================================================*/
-IF L_CONDICION = 'Promotion' THEN
-    L_CLAVE = 'Promotion'
-ELSE IF L_CONDICION = 'NonPerm' THEN
-    L_CLAVE = 'NonPerm'
-ELSE IF L_CONDICION = 'NewHire' THEN
-    L_CLAVE = 'NewHire'
-ELSE IF L_EVAL_TXT = 'N/A' THEN
-    L_CLAVE = 'WithoutEval'
-ELSE IF L_EVAL_TXT = 'Exit' THEN
-    L_CLAVE = 'Exit'
-ELSE IF L_EVAL_TXT = 'Needs Improvement' THEN
-    L_CLAVE = 'Needs Improvement'
-ELSE IF L_EVAL_TXT = 'Below Expectations' THEN
-    L_CLAVE = 'Below Expectations'
-ELSE IF L_APERTURA <= 100 THEN
-    L_CLAVE = L_EVAL_TXT || '_LT100'
+IF L_KEY_PAIS = 'MOR' THEN
+(
+    IF L_CONDICION = 'Promotion' THEN
+        L_CLAVE = 'PROMOTION'
+    ELSE IF L_CONDICION = 'NonPerm' THEN
+        L_CLAVE = 'NONPERM'
+    ELSE IF L_CONDICION = 'NewHire' THEN
+        L_CLAVE = 'NEWHIRE'
+    ELSE IF L_EVAL_TXT = 'N/A' THEN
+        L_CLAVE = 'WITHOUTEVAL'
+    ELSE IF L_EVAL_TXT = 'Exit' THEN
+        L_CLAVE = 'EXIT'
+    ELSE
+    (
+        IF L_EVAL_TXT = 'Outstanding' THEN
+            L_EVAL_UP = 'OUTSTANDING'
+        ELSE IF L_EVAL_TXT = 'Surpasses' THEN
+            L_EVAL_UP = 'SURPASSES'
+        ELSE IF L_EVAL_TXT = 'Achieved Expectations' THEN
+            L_EVAL_UP = 'ACHIEVED EXPECTATIONS'
+        ELSE IF L_EVAL_TXT = 'Below Expectations' THEN
+            L_EVAL_UP = 'BELOW EXPECTATIONS'
+        ELSE IF L_EVAL_TXT = 'Needs Improvement' THEN
+            L_EVAL_UP = 'NEEDS IMPROVEMENT'
+        ELSE
+            L_EVAL_UP = L_EVAL_TXT
+
+        IF L_APERTURA <= 100 THEN
+            L_CLAVE = L_EVAL_UP || '_LT100'
+        ELSE
+            L_CLAVE = L_EVAL_UP || '_GE100'
+    )
+)
 ELSE
-    L_CLAVE = L_EVAL_TXT || '_GE100'
+(
+    IF L_CONDICION = 'Promotion' THEN
+        L_CLAVE = 'Promotion'
+    ELSE IF L_CONDICION = 'NonPerm' THEN
+        L_CLAVE = 'NonPerm'
+    ELSE IF L_CONDICION = 'NewHire' THEN
+        L_CLAVE = 'NewHire'
+    ELSE IF L_EVAL_TXT = 'N/A' THEN
+        L_CLAVE = 'WithoutEval'
+    ELSE IF L_EVAL_TXT = 'Exit' THEN
+        L_CLAVE = 'Exit'
+    ELSE IF L_EVAL_TXT = 'Needs Improvement' THEN
+        L_CLAVE = 'Needs Improvement'
+    ELSE IF L_EVAL_TXT = 'Below Expectations' THEN
+        L_CLAVE = 'Below Expectations'
+    ELSE IF L_APERTURA <= 100 THEN
+        L_CLAVE = L_EVAL_TXT || '_LT100'
+    ELSE
+        L_CLAVE = L_EVAL_TXT || '_GE100'
+)
 
 l_log = SET_LOG('Clave UDT: ' || L_CLAVE)
 
 /*============================================================================
-  LECTURA UDT
+  LECTURA UDT POR IDIOMA
 ============================================================================*/
-L_RANGO_MAX  = GET_TABLE_VALUE('GB_CMP_RANGOS_MERITO', 'Rango_Maximo', L_CLAVE)
-L_APLICA_INF = GET_TABLE_VALUE('GB_CMP_RANGOS_MERITO', 'Aplica_Inflacion', L_CLAVE)
+IF L_KEY_PAIS = 'MOR' THEN
+(
+    L_RANGO_MAX  = GET_TABLE_VALUE('GB_CMP_MAR_RANGOS_MERITO_V2', 'Maximum_Range', L_CLAVE)
+    L_APLICA_INF = GET_TABLE_VALUE('GB_CMP_MAR_RANGOS_MERITO_V2', 'Apply_Inflation', L_CLAVE)
+)
+ELSE
+(
+    L_RANGO_MAX  = GET_TABLE_VALUE('GB_CMP_RANGOS_MERITO', 'Rango_Maximo', L_CLAVE)
+    L_APLICA_INF = GET_TABLE_VALUE('GB_CMP_RANGOS_MERITO', 'Aplica_Inflacion', L_CLAVE)
+)
 l_log = SET_LOG('Rango Max: '        || L_RANGO_MAX)
 l_log = SET_LOG('Aplica Inflacion: ' || L_APLICA_INF)
 

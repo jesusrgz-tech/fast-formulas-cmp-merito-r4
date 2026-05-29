@@ -3,12 +3,13 @@
 * FORMULA TYPE      : Compensation Default and Override                       *
 * DESCRIPTION       : Obtiene el porcentaje minimo de incremento por merito   *
 *                     para R4 (Espana, Portugal, Marruecos) de forma dinamica *
-*                     desde UDT GB_CMP_RANGOS_MERITO. Promedio e inflacion    *
+*                     desde UDT por idioma: GB_CMP_RANGOS_MERITO (ES/PT) o   *
+*                     GB_CMP_MAR_RANGOS_MERITO (MOR). Promedio e inflacion    *
 *                     se obtienen desde GB_INCREMENTO_MERITO por pais.        *
 *-----------------------------------------------------------------------------*
 * CREATED BY        : IT-GLOBAL                                               *
 * CREATION DATE     : 07-Abril-2026                                           *
-* LAST UPDATE DATE  : 27-Mayo-2026                                            *
+* LAST UPDATE DATE  : 28-Mayo-2026                                            *
 *-----------------------------------------------------------------------------*
 * Change History:                                                             *
 * Author          | Date            | Ver | Comments                          *
@@ -19,6 +20,10 @@
 *                 |                 |     | por recorrido historico de nivel  *
 * IT Global       | 27-Mayo-2026    |  4  | Adaptacion R4: key por pais       *
 *                 |                 |     | MOR/ESP/PT desde Legal Employer   *
+* IT Global       | 28-Mayo-2026    |  5  | Lectura UDT por idioma MOR vs     *
+*                 |                 |     | ES_PT; clave con sufijo apertura  *
+*                 |                 |     | para Below Expectations y Needs   *
+*                 |                 |     | Improvement en MOR                *
 ******************************************************************************/
 
 INPUTS ARE CMP_IV_PLAN_START_DATE (text),
@@ -263,9 +268,9 @@ ELSE IF L_EVAL_TXT = 'N/A' THEN
     L_CLAVE = 'WithoutEval'
 ELSE IF L_EVAL_TXT = 'Exit' THEN
     L_CLAVE = 'Exit'
-ELSE IF L_EVAL_TXT = 'Needs Improvement' THEN
+ELSE IF L_EVAL_TXT = 'Needs Improvement' AND L_KEY_PAIS != 'MOR' THEN
     L_CLAVE = 'Needs Improvement'
-ELSE IF L_EVAL_TXT = 'Below Expectations' THEN
+ELSE IF L_EVAL_TXT = 'Below Expectations' AND L_KEY_PAIS != 'MOR' THEN
     L_CLAVE = 'Below Expectations'
 ELSE IF L_APERTURA <= 100 THEN
     L_CLAVE = L_EVAL_TXT || '_LT100'
@@ -275,10 +280,18 @@ ELSE
 l_log = SET_LOG('Clave UDT: ' || L_CLAVE)
 
 /*============================================================================
-  LECTURA UDT
+  LECTURA UDT POR IDIOMA
 ============================================================================*/
-L_RANGO_MIN  = GET_TABLE_VALUE('GB_CMP_RANGOS_MERITO', 'Rango_Minimo', L_CLAVE)
-L_APLICA_INF = GET_TABLE_VALUE('GB_CMP_RANGOS_MERITO', 'Aplica_Inflacion', L_CLAVE)
+IF L_KEY_PAIS = 'MOR' THEN
+(
+    L_RANGO_MIN  = GET_TABLE_VALUE('GB_CMP_MAR_RANGOS_MERITO_V2', 'Minimum_Range', L_CLAVE)
+    L_APLICA_INF = GET_TABLE_VALUE('GB_CMP_MAR_RANGOS_MERITO_V2', 'Apply_Inflation', L_CLAVE)
+)
+ELSE
+(
+    L_RANGO_MIN  = GET_TABLE_VALUE('GB_CMP_RANGOS_MERITO', 'Rango_Minimo', L_CLAVE)
+    L_APLICA_INF = GET_TABLE_VALUE('GB_CMP_RANGOS_MERITO', 'Aplica_Inflacion', L_CLAVE)
+)
 l_log = SET_LOG('Rango Min: '        || L_RANGO_MIN)
 l_log = SET_LOG('Aplica Inflacion: ' || L_APLICA_INF)
 
@@ -314,6 +327,8 @@ l_log = SET_LOG('Val R4: ' || TO_CHAR(L_VAL_R4))
 
 /*============================================================================
   RESOLUCION NUMERICA MINIMO
+  MOR usa valores en ingles: R1, R2, R3, R4, NO, PROM, MITAD
+  ES/PT usa los mismos valores — estructura de resolucion compartida
 ============================================================================*/
 IF L_RANGO_MIN = 'NO' THEN
     L_DEFAULT_MIN = 0
