@@ -5,8 +5,7 @@
 *                     registro de incapacidad (CMP_INCAPACIDAD) con valor    *
 *                     'SI' en VALUE1. Si no hay incapacidad lee el valor     *
 *                     de datos externos CMP_MERITO_INCRE VALUE1 y lo retorna *
-*                     como % Incremento. Si no hay registro CMP_MERITO_INCRE *
-*                     retorna 0.                                              *
+*                     como % Incremento.                                        *
 *-----------------------------------------------------------------------------*
 * CREATED BY        : IT-GLOBAL                                               *
 * CREATION DATE     : 08-Mayo-2026                                            *
