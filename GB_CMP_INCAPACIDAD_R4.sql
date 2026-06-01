@@ -80,7 +80,7 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE, COMPENSATION_RECORD_TYPE = 'CM
         L_EXT_VAL = CMP_EXTERNAL_WORKER_DATA_RGE_ASG_VALUE1[L_IDX]
         l_log = SET_LOG('Valor incapacidad idx ' || TO_CHAR(L_IDX) || ': ' || L_EXT_VAL)
 
-        IF L_EXT_VAL = 'SI' THEN
+        IF L_EXT_VAL = 'Yes' THEN
         (
             L_INCAPACIDAD = 'Y'
             L_IDX = 0
