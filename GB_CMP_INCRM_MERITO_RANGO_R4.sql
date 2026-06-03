@@ -52,6 +52,7 @@ DEFAULT FOR PER_ASG_GRADE_ID IS 123
 DEFAULT FOR PER_ASG_PERSON_ID IS 0
 DEFAULT FOR CMP_ASSIGNMENT_SALARY_AMOUNT IS 0
 DEFAULT FOR PER_ASG_ORG_LEGAL_EMPLOYER_NAME IS 'N/LE'
+DEFAULT FOR PER_ASG_DATE_START IS '1900/01/01' (date)
 
 /*============================================================================
   FECHAS BASE
@@ -271,9 +272,9 @@ ELSE IF L_EVAL_TXT = 'N/A' THEN
     L_CLAVE = 'WithoutEval'
 ELSE IF L_EVAL_TXT = 'Exit' THEN
     L_CLAVE = 'Exit'
-ELSE IF L_EVAL_TXT = 'Needs Improvement' THEN
+ELSE IF L_EVAL_TXT = 'Needs Improvement' AND L_KEY_PAIS != 'MOR' THEN
     L_CLAVE = 'Needs Improvement'
-ELSE IF L_EVAL_TXT = 'Below Expectations' THEN
+ELSE IF L_EVAL_TXT = 'Below Expectations' AND L_KEY_PAIS != 'MOR' THEN
     L_CLAVE = 'Below Expectations'
 ELSE IF L_APERTURA <= 100 THEN
     L_CLAVE = L_EVAL_TXT || '_LT100'
