@@ -1,5 +1,5 @@
 /******************************************************************************
-* FORMULA NAME      : GB_CMP_INCRM_MERITO_RANGO_R4                               *
+* FORMULA NAME      : GB_CMP_INCRM_MERITO_RANGO_R4                            *
 * FORMULA TYPE      : Compensation Default and Override                       *
 * DESCRIPTION       : Obtiene el texto del rango de incremento por merito     *
 *                     para R4 (Espana, Portugal, Marruecos) leyendo desde     *

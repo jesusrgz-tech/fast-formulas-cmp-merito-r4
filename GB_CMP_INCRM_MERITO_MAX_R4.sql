@@ -301,6 +301,8 @@ ELSE
         L_CLAVE = 'WithoutEval'
     ELSE IF L_EVAL_TXT = 'Exit' THEN
         L_CLAVE = 'Exit'
+    ELSE IF L_EVAL_TXT = 'Salida' THEN
+        L_CLAVE = 'Salida'
     ELSE IF L_EVAL_TXT = 'Needs Improvement' THEN
         L_CLAVE = 'Needs Improvement'
     ELSE IF L_EVAL_TXT = 'Below Expectations' THEN
