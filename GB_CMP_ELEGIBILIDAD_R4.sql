@@ -2,7 +2,7 @@
 * *
 * FORMULA NAME      : GB_CMP_ELEGIBILIDAD_R4                                  *
 * FORMULA TYPE      : Participation and Rate Eligibility                      *
-* DESCRIPTION       : Elegibilidad para Brasil. Incluye solo colaboradores    *
+* DESCRIPTION       : Elegibilidad para Incluye solo colaboradores    *
 *                     con nivel 4 en adelante                                  
 * *
 *---------------------------------------------------------------------------*

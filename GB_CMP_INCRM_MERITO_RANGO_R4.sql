@@ -270,8 +270,10 @@ ELSE IF L_CONDICION = 'NewHire' THEN
     L_CLAVE = 'NewHire'
 ELSE IF L_EVAL_TXT = 'N/A' THEN
     L_CLAVE = 'WithoutEval'
-ELSE IF L_EVAL_TXT = 'Exit' THEN
+ELSE IF L_EVAL_TXT = 'Exit' AND L_KEY_PAIS != 'MOR' THEN
     L_CLAVE = 'Exit'
+ELSE IF L_EVAL_TXT = 'Salida' THEN
+    L_CLAVE = 'Salida'
 ELSE IF L_EVAL_TXT = 'Needs Improvement' AND L_KEY_PAIS != 'MOR' THEN
     L_CLAVE = 'Needs Improvement'
 ELSE IF L_EVAL_TXT = 'Below Expectations' AND L_KEY_PAIS != 'MOR' THEN

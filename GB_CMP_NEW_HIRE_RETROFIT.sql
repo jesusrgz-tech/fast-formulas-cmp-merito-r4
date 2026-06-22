@@ -5,7 +5,10 @@ DESCRIPTION : identifica si la fecha de contratación es posterior a la fecha de
 ***********************************************************************/
 
 /*=========== INPUT VALUES DEFAULTS BEGIN =====================*/
-INPUTS ARE CMP_IV_PLAN_EXTRACTION_DATE (text), CMP_IV_PLAN_START_DATE (text) ,CMP_IV_PLAN_END_DATE (text)
+INPUTS ARE 
+CMP_IV_PLAN_EXTRACTION_DATE (text), 
+CMP_IV_PLAN_START_DATE (text) ,
+CMP_IV_PLAN_END_DATE (text)
 
 /*=========== INPUT VALUES DEFAULTS END =====================*/
 
@@ -37,12 +40,16 @@ ORIGINAL_HIRE_DATE = PER_ASG_REL_ORIGINAL_DATE_OF_HIRE
 /* +========================= LOCAL VARIABLES ENDS =============================== */
 
 
-IF ORIGINAL_HIRE_DATE >= PL_START_DATE THEN
+IF ORIGINAL_HIRE_DATE >= ADD_MONTHS(PL_START_DATE, 12) THEN
 (
 NEW_HIRE = 'Y'
 )
 
 DEFAULT_VALUE = NEW_HIRE
+
+l_log = SET_LOG ('Fecha de contrataion : ' || TO_CHAR(PL_START_DATE))
+l_log = SET_LOG ('Resultado New Hire : ' || NEW_HIRE)
+
 
 
 /* +========================= FORMULA SECTION ENDS =============================== */
