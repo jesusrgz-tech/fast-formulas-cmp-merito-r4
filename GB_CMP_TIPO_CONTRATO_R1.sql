@@ -1,5 +1,5 @@
 /******************************************************************************
-* FORMULA NAME      : GB_CMP_TIPO_CONTRATO_R4                               *
+* FORMULA NAME      : GB_CMP_TIPO_CONTRATO_R1                                 *
 * FORMULA TYPE      : Compensation Default and Override                       *
 * DESCRIPTION       : Retorna el tipo de contrato del colaborador.            *
 *                     1 = Permanente, 2 = No permanente.                      *

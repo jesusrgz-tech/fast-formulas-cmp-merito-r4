@@ -1,27 +1,29 @@
 /******************************************************************************
-* FORMULA NAME      : GB_CMP_INCRM_MERITO_MAX_R4                                 *
+* FORMULA NAME      : GB_CMP_INCRM_MERITO_MIN_R1                              *
 * FORMULA TYPE      : Compensation Default and Override                       *
-* DESCRIPTION       : Obtiene el porcentaje maximo de incremento por merito   *
+* DESCRIPTION       : Obtiene el porcentaje minimo de incremento por merito   *
 *                     para R4 (Espana, Portugal, Marruecos) de forma dinamica *
 *                     desde UDT por idioma: GB_CMP_RANGOS_MERITO (ES/PT) o   *
-*                     GB_CMP_MAR_RANGOS_MERITO_V2 (MOR). Promedio e inflacion *
+*                     GB_CMP_MAR_RANGOS_MERITO (MOR). Promedio e inflacion    *
 *                     se obtienen desde GB_INCREMENTO_MERITO por pais.        *
 *-----------------------------------------------------------------------------*
 * CREATED BY        : IT-GLOBAL                                               *
 * CREATION DATE     : 07-Abril-2026                                           *
-* LAST UPDATE DATE  : 29-Mayo-2026                                            *
+* LAST UPDATE DATE  : 28-Mayo-2026                                            *
 *-----------------------------------------------------------------------------*
 * Change History:                                                             *
 * Author          | Date            | Ver | Comments                          *
 *-----------------+-----------------+-----+-----------------------------------*
 * IT Global       | 15-Abril-2026   |  1  | Version Inicial                   *
 * IT Global       | 21-Abril-2026   |  2  | Reestructura dinamica UDT         *
-* IT Global       | 27-Mayo-2026    |  3  | Adaptacion R4: key por pais       *
+* IT Global       | 14-Mayo-2026    |  3  | Replica logica retrofit promotion *
+*                 |                 |     | por recorrido historico de nivel  *
+* IT Global       | 27-Mayo-2026    |  4  | Adaptacion R4: key por pais       *
 *                 |                 |     | MOR/ESP/PT desde Legal Employer   *
-* IT Global       | 29-Mayo-2026    |  4  | Construccion clave en mayusculas  *
-*                 |                 |     | para MOR; lectura UDT por idioma  *
-*                 |                 |     | GB_CMP_MAR_RANGOS_MERITO_V2 vs    *
-*                 |                 |     | GB_CMP_RANGOS_MERITO              *
+* IT Global       | 28-Mayo-2026    |  5  | Lectura UDT por idioma MOR vs     *
+*                 |                 |     | ES_PT; clave con sufijo apertura  *
+*                 |                 |     | para Below Expectations y Needs   *
+*                 |                 |     | Improvement en MOR                *
 ******************************************************************************/
 
 INPUTS ARE CMP_IV_PLAN_START_DATE (text),
@@ -52,7 +54,7 @@ DEFAULT FOR PER_ASG_ORG_LEGAL_EMPLOYER_NAME IS 'N/LE'
 HR_EXTRACT_DATE = TO_DATE(CMP_IV_PLAN_EXTRACTION_DATE, 'YYYY/MM/DD')
 L_PL_END_DATE   = TO_DATE(CMP_IV_PLAN_END_DATE, 'YYYY/MM/DD')
 
-l_log = SET_LOG('*** INICIO GB_CMP_INCRM_MERITO_MAX_R4 ***')
+l_log = SET_LOG('*** INICIO GB_CMP_INCRM_MERITO_MIN_R4 ***')
 L_ASG_ID = CMP_IVR_ASSIGNMENT_ID[1]
 l_log = SET_LOG('Assignment ID: ' || TO_CHAR(L_ASG_ID))
 
@@ -66,20 +68,45 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE)
 
 l_log = SET_LOG('Legal Employer: ' || L_LEGAL_EMPLOYER)
 
-IF L_LEGAL_EMPLOYER = 'Bimbo Morocco, S.A.R.L.A.U.' THEN
-    L_KEY_PAIS = 'MOR'
-ELSE IF L_LEGAL_EMPLOYER = 'Bimbo Donuts Portugal, LDA' THEN
-    L_KEY_PAIS = 'PT'
+IF L_LEGAL_EMPLOYER = 'Bimbo de Colombia, S.A.' THEN
+    L_KEY_UDT = 'COL'
+ELSE IF L_LEGAL_EMPLOYER = 'Bimbo Ecuador S.A.' THEN
+    L_KEY_UDT = 'EC'
+ELSE IF L_LEGAL_EMPLOYER = 'Bimbo de Costa Rica, S.A.' THEN
+    L_KEY_UDT = 'CR'
+ELSE IF L_LEGAL_EMPLOYER = 'Barcel  de El Salvador, S.A. de C.V.' OR L_LEGAL_EMPLOYER = 'Bimbo de El Salvador, S.A. de C.V.' THEN
+    L_KEY_UDT = 'SV'
+ELSE IF L_LEGAL_EMPLOYER = 'Bimbo de Centroamerica, S.A.' OR L_LEGAL_EMPLOYER = 'VeCentral, S.A.' OR L_LEGAL_EMPLOYER = 'Centro de Servicios Compartidos Bimbo, S.A.' THEN
+    L_KEY_UDT = 'GT'
+ELSE IF L_LEGAL_EMPLOYER = 'Bimbo de Honduras, S.A. de C.V.' OR L_LEGAL_EMPLOYER = 'Compañía Industrial Lido Pozuelo, S.A. de C.V.' THEN
+    L_KEY_UDT = 'HN'
+ELSE IF L_LEGAL_EMPLOYER = 'Panificadora Bimbo del Uruguay Sociedad Anonima' THEN
+    L_KEY_UDT = 'UY'
+ELSE IF L_LEGAL_EMPLOYER = 'Bimbo de Panama, S.A.' OR L_LEGAL_EMPLOYER = 'Nutriamericas S.A.' THEN
+    L_KEY_UDT = 'PA'
+ELSE IF L_LEGAL_EMPLOYER = 'Compañia de Alimentos Fargo, S.A.' THEN
+    L_KEY_UDT = 'AR'
+ELSE IF L_LEGAL_EMPLOYER = 'Ideal, S.A.' OR L_LEGAL_EMPLOYER = 'Barcel Chile, S.A.' THEN
+    L_KEY_UDT = 'CL'
+ELSE IF L_LEGAL_EMPLOYER = 'Bimbo Paraguay, S.A.' THEN
+    L_KEY_UDT = 'PY'
+ELSE IF L_LEGAL_EMPLOYER = 'Panificadora Bimbo del Peru, S.A.' THEN
+    L_KEY_UDT = 'PE'
+ELSE IF L_LEGAL_EMPLOYER = 'Bimbo de Nicaragua, S.A.' THEN
+    L_KEY_UDT = 'NI'
+ELSE IF L_LEGAL_EMPLOYER = 'Barcel, S.A. de C.V.' OR L_LEGAL_EMPLOYER = 'Bimbonet Servicios, S.A.P.I. de C.V.' OR L_LEGAL_EMPLOYER = 'Bimbo, S.A. de C.V.' OR L_LEGAL_EMPLOYER = 'Corporativo Bimbo, S.A. de C.V.' OR L_LEGAL_EMPLOYER = 'Moldes y Exhibidores, S.A. de C.V.' OR L_LEGAL_EMPLOYER = 'Tradicion en Pastelerías, S.A. de C.V.' THEN
+    L_KEY_UDT = 'MEX'
 ELSE
-    L_KEY_PAIS = 'ESP'
+    L_KEY_UDT = 'DEFAULT' 
 
-l_log = SET_LOG('Key pais UDT: ' || L_KEY_PAIS)
+
+l_log = SET_LOG('Key pais UDT: ' || L_KEY_UDT)
 
 /*============================================================================
   PROMEDIO E INFLACION POR PAIS
 ============================================================================*/
-L_PROM      = TO_NUMBER(GET_TABLE_VALUE('GB_INCREMENTO_MERITO', 'Incremento_Promedio', L_KEY_PAIS))
-L_INFLACION = TO_NUMBER(GET_TABLE_VALUE('GB_INCREMENTO_MERITO', 'Inflacion_Minima', L_KEY_PAIS))
+L_PROM      = TO_NUMBER(GET_TABLE_VALUE('GB_CMP_LAC_LAS_INCREMENTO_MERITO', 'Incremento_Promedio', L_KEY_UDT))
+L_INFLACION = TO_NUMBER(GET_TABLE_VALUE('GB_CMP_LAC_LAS_INCREMENTO_MERITO', 'Inflacion_Minima', L_KEY_UDT))
 l_log = SET_LOG('Promedio: '  || TO_CHAR(L_PROM))
 l_log = SET_LOG('Inflacion: ' || TO_CHAR(L_INFLACION))
 
@@ -98,11 +125,7 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE, COMPENSATION_RECORD_TYPE = 'CM
         L_EXT_VAL = CMP_EXTERNAL_WORKER_DATA_RGE_ASG_VALUE1[L_IDX]
         IF L_EXT_VAL != 'N/A' THEN
         (
-            IF L_KEY_PAIS = 'MOR' THEN
-                L_EVAL_MAPPED = GET_TABLE_VALUE('GB_CMP_MAR_CALIFICAC_MERITO', 'Calificacion_Texto', L_EXT_VAL)
-            ELSE
-                L_EVAL_MAPPED = GET_TABLE_VALUE('GB_CMP_CALIFICAC_MERITO', 'Calificacion_Texto', L_EXT_VAL)
-
+                L_EVAL_MAPPED = GET_TABLE_VALUE('GB_CMP_LAC_LAS_CALIFICAC_MERITO', 'Calificacion_Texto', L_EXT_VAL)
             IF L_EVAL_MAPPED != 'N/A' THEN
             (
                 L_EVAL_TXT = L_EVAL_MAPPED
@@ -116,6 +139,23 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE, COMPENSATION_RECORD_TYPE = 'CM
     )
 )
 l_log = SET_LOG('Evaluacion: ' || L_EVAL_TXT)
+
+
+CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE)
+(
+    L_LEGAL_EMPLOYER = PER_ASG_ORG_LEGAL_EMPLOYER_NAME
+    L_GRADE          = PER_ASG_GRADE_ID
+    L_SUELDO         = CMP_ASSIGNMENT_SALARY_AMOUNT
+    L_PER_ID         = PER_ASG_PERSON_ID
+)
+
+l_log = SET_LOG('Legal Employer: ' || L_LEGAL_EMPLOYER)
+l_log = SET_LOG('Grade ID: '       || TO_CHAR(L_GRADE))
+l_log = SET_LOG('Sueldo: '         || TO_CHAR(L_SUELDO))
+
+L_DIVISOR = 365
+
+l_log = SET_LOG('Divisor periodicidad: ' || TO_CHAR(L_DIVISOR))
 
 /*============================================================================
   DATOS DEL ASSIGNMENT
@@ -133,12 +173,12 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE)
     ASSIGN_END_DATE    = PER_ASG_EFFECTIVE_END_DATE
 )
 
-l_log = SET_LOG('Tipo contrato: '        || L_TIPO_CONTRATO)
-l_log = SET_LOG('Action code: '          || L_ACTION)
-l_log = SET_LOG('Hire Date: '            || TO_CHAR(L_HIRE_DATE, 'YYYY/MM/DD'))
-l_log = SET_LOG('Grade ID: '             || TO_CHAR(L_GRADE))
-l_log = SET_LOG('Sueldo: '               || TO_CHAR(L_SUELDO))
-l_log = SET_LOG('Manager Level Actual: ' || MGR_LVL)
+l_log = SET_LOG('Tipo contrato: ' || L_TIPO_CONTRATO)
+l_log = SET_LOG('Action code: '   || L_ACTION)
+l_log = SET_LOG('Hire Date: '     || TO_CHAR(L_HIRE_DATE, 'YYYY/MM/DD'))
+l_log = SET_LOG('Grade ID: '      || TO_CHAR(L_GRADE))
+l_log = SET_LOG('Sueldo: '        || TO_CHAR(L_SUELDO))
+l_log = SET_LOG('Manager Level actual: ' || MGR_LVL)
 
 /*============================================================================
   CALCULO APERTURA
@@ -168,7 +208,7 @@ IF L_MAX = L_MIN THEN
     L_APERTURA = 0
 ELSE
 (
-    L_VALOR_PUNTO = (L_MAX - L_MIN) / 30
+    L_VALOR_PUNTO = (L_MAX - L_MIN) / L_DIVISOR 
     L_APERTURA    = ((L_SUELDO - L_MIN) / L_VALOR_PUNTO) + 70
 )
 l_log = SET_LOG('Apertura calculada: ' || TO_CHAR(L_APERTURA))
@@ -256,79 +296,45 @@ l_log = SET_LOG('Condicion: ' || L_CONDICION)
 /*============================================================================
   CONSTRUCCION DE CLAVE UDT
 ============================================================================*/
-IF L_KEY_PAIS = 'MOR' THEN
-(
-    IF L_CONDICION = 'Promotion' THEN
-        L_CLAVE = 'PROMOTION'
-    ELSE IF L_CONDICION = 'NonPerm' THEN
-        L_CLAVE = 'NONPERM'
-    ELSE IF L_CONDICION = 'NewHire' THEN
-        L_CLAVE = 'NEWHIRE'
-    ELSE IF L_EVAL_TXT = 'N/A' THEN
-        L_CLAVE = 'WITHOUTEVAL'
-    ELSE IF L_EVAL_TXT = 'Exit' THEN
-        L_CLAVE = 'EXIT'
-    ELSE
-    (
-        IF L_EVAL_TXT = 'Outstanding' THEN
-            L_EVAL_UP = 'OUTSTANDING'
-        ELSE IF L_EVAL_TXT = 'Surpasses' THEN
-            L_EVAL_UP = 'SURPASSES'
-        ELSE IF L_EVAL_TXT = 'Achieved Expectations' THEN
-            L_EVAL_UP = 'ACHIEVED EXPECTATIONS'
-        ELSE IF L_EVAL_TXT = 'Below Expectations' THEN
-            L_EVAL_UP = 'BELOW EXPECTATIONS'
-        ELSE IF L_EVAL_TXT = 'Needs Improvement' THEN
-            L_EVAL_UP = 'NEEDS IMPROVEMENT'
-        ELSE
-            L_EVAL_UP = L_EVAL_TXT
-
-        IF L_APERTURA <= 100 THEN
-            L_CLAVE = L_EVAL_UP || '_LT100'
-        ELSE
-            L_CLAVE = L_EVAL_UP || '_GE100'
-    )
-)
+IF L_CONDICION = 'Promotion' THEN
+    L_CLAVE = 'Promotion'
+ELSE IF L_CONDICION = 'NonPerm' THEN
+    L_CLAVE = 'NonPerm'
+ELSE IF L_CONDICION = 'NewHire' THEN
+    L_CLAVE = 'NewHire'
+ELSE IF L_EVAL_TXT = 'N/A'  THEN
+    L_CLAVE = 'WithoutEval'
+ELSE IF L_EVAL_TXT = 'N/A'  THEN
+    L_CLAVE = 'SinEval'
+    ELSE IF L_EVAL_TXT = 'N/A'  THEN
+    L_CLAVE = 'SinEval'
+ELSE IF L_EVAL_TXT = 'N/A' THEN
+    L_CLAVE = 'Exit'
+ELSE IF L_EVAL_TXT = 'Exit' THEN
+    L_CLAVE = 'Exit'
+ELSE IF L_EVAL_TXT = 'Salida' THEN
+    L_CLAVE = 'Salida'
+ELSE IF L_APERTURA <= 100 THEN
+    L_CLAVE = L_EVAL_TXT || '_LT100'
 ELSE
-(
-    IF L_CONDICION = 'Promotion' THEN
-        L_CLAVE = 'Promotion'
-    ELSE IF L_CONDICION = 'NonPerm' THEN
-        L_CLAVE = 'NonPerm'
-    ELSE IF L_CONDICION = 'NewHire' THEN
-        L_CLAVE = 'NewHire'
-    ELSE IF L_EVAL_TXT = 'N/A' THEN
-        L_CLAVE = 'WithoutEval'
-    ELSE IF L_EVAL_TXT = 'Exit' THEN
-        L_CLAVE = 'Exit'
-    ELSE IF L_EVAL_TXT = 'Salida' THEN
-        L_CLAVE = 'Salida'
-    ELSE IF L_EVAL_TXT = 'Needs Improvement' THEN
-        L_CLAVE = 'Needs Improvement'
-    ELSE IF L_EVAL_TXT = 'Below Expectations' THEN
-        L_CLAVE = 'Below Expectations'
-    ELSE IF L_APERTURA <= 100 THEN
-        L_CLAVE = L_EVAL_TXT || '_LT100'
-    ELSE
-        L_CLAVE = L_EVAL_TXT || '_GE100'
-)
+    L_CLAVE = L_EVAL_TXT || '_GE100'
 
 l_log = SET_LOG('Clave UDT: ' || L_CLAVE)
 
 /*============================================================================
   LECTURA UDT POR IDIOMA
 ============================================================================*/
-IF L_KEY_PAIS = 'MOR' THEN
+IF L_KEY_UDT = 'COL' THEN
 (
-    L_RANGO_MAX  = GET_TABLE_VALUE('GB_CMP_MAR_RANGOS_MERITO_V2', 'Maximum_Range', L_CLAVE)
-    L_APLICA_INF = GET_TABLE_VALUE('GB_CMP_MAR_RANGOS_MERITO_V2', 'Apply_Inflation', L_CLAVE)
+    L_RANGO_MIN  = GET_TABLE_VALUE('GB_CMP_CO_RANGOS_MERITO', 'Rango_Minimo', L_CLAVE)
+    L_APLICA_INF = GET_TABLE_VALUE('GB_CMP_CO_RANGOS_MERITO', 'Aplica_Inflacion', L_CLAVE)
 )
 ELSE
 (
-    L_RANGO_MAX  = GET_TABLE_VALUE('GB_CMP_RANGOS_MERITO', 'Rango_Maximo', L_CLAVE)
-    L_APLICA_INF = GET_TABLE_VALUE('GB_CMP_RANGOS_MERITO', 'Aplica_Inflacion', L_CLAVE)
+    L_RANGO_MIN  = GET_TABLE_VALUE('GB_CMP_LAS_LAC_RANGOS_MERITO', 'Rango_Minimo', L_CLAVE)
+    L_APLICA_INF = GET_TABLE_VALUE('GB_CMP_LAS_LAC_RANGOS_MERITO', 'Aplica_Inflacion', L_CLAVE)
 )
-l_log = SET_LOG('Rango Max: '        || L_RANGO_MAX)
+l_log = SET_LOG('Rango Min: '        || L_RANGO_MIN)
 l_log = SET_LOG('Aplica Inflacion: ' || L_APLICA_INF)
 
 /*============================================================================
@@ -336,36 +342,24 @@ l_log = SET_LOG('Aplica Inflacion: ' || L_APLICA_INF)
 ============================================================================*/
 IF L_PROM > 10 THEN
 (
-    L_VAL_R1_MIN = L_PROM - 3
-    L_VAL_R2_MIN = L_PROM - 1.5
-    L_VAL_R3_MIN = L_PROM
-    L_VAL_R4_MIN = L_PROM + 1.5
-    L_VAL_R1 = L_PROM - 1.5
-    L_VAL_R2 = L_PROM
-    L_VAL_R3 = L_PROM + 1.5
-    L_VAL_R4 = L_PROM + 3
+    L_VAL_R1 = L_PROM - 3
+    L_VAL_R2 = L_PROM - 1.5
+    L_VAL_R3 = L_PROM
+    L_VAL_R4 = L_PROM + 1.5
 )
 ELSE IF L_PROM >= 5 AND L_PROM <= 10 THEN
 (
-    L_VAL_R1_MIN = L_PROM * 0.70
-    L_VAL_R2_MIN = L_PROM * 0.85
-    L_VAL_R3_MIN = L_PROM
-    L_VAL_R4_MIN = L_PROM * 1.15
-    L_VAL_R1 = L_PROM * 0.85
-    L_VAL_R2 = L_PROM
-    L_VAL_R3 = L_PROM * 1.15
-    L_VAL_R4 = L_PROM * 1.30
+    L_VAL_R1 = L_PROM * 0.70
+    L_VAL_R2 = L_PROM * 0.85
+    L_VAL_R3 = L_PROM
+    L_VAL_R4 = L_PROM * 1.15
 )
 ELSE
 (
-    L_VAL_R1_MIN = L_PROM - 1.5
-    L_VAL_R2_MIN = L_PROM - 0.75
-    L_VAL_R3_MIN = L_PROM
-    L_VAL_R4_MIN = L_PROM + 0.75
-    L_VAL_R1 = L_PROM - 0.75
-    L_VAL_R2 = L_PROM
-    L_VAL_R3 = L_PROM + 0.75
-    L_VAL_R4 = L_PROM + 1.5
+    L_VAL_R1 = L_PROM - 1.5
+    L_VAL_R2 = L_PROM - 0.75
+    L_VAL_R3 = L_PROM
+    L_VAL_R4 = L_PROM + 0.75
 )
 
 l_log = SET_LOG('Val R1: ' || TO_CHAR(L_VAL_R1))
@@ -374,34 +368,36 @@ l_log = SET_LOG('Val R3: ' || TO_CHAR(L_VAL_R3))
 l_log = SET_LOG('Val R4: ' || TO_CHAR(L_VAL_R4))
 
 /*============================================================================
-  RESOLUCION NUMERICA MAXIMO
+  RESOLUCION NUMERICA MINIMO
+  MOR usa valores en ingles: R1, R2, R3, R4, NO, PROM, MITAD
+  ES/PT usa los mismos valores — estructura de resolucion compartida
 ============================================================================*/
-IF L_RANGO_MAX = 'NO' THEN
-    L_DEFAULT_MAX = 0
-ELSE IF L_RANGO_MAX = 'R1_MIN' THEN
-    L_DEFAULT_MAX = L_VAL_R1_MIN
-ELSE IF L_RANGO_MAX = 'R1' THEN
-    L_DEFAULT_MAX = L_VAL_R1
-ELSE IF L_RANGO_MAX = 'R2' THEN
-    L_DEFAULT_MAX = L_VAL_R2
-ELSE IF L_RANGO_MAX = 'R3' THEN
-    L_DEFAULT_MAX = L_VAL_R3
-ELSE IF L_RANGO_MAX = 'R4' THEN
-    L_DEFAULT_MAX = L_VAL_R4
-ELSE IF L_RANGO_MAX = 'PROM' THEN
-    L_DEFAULT_MAX = L_PROM
-ELSE IF L_RANGO_MAX = 'HALF_PROM' THEN
-    L_DEFAULT_MAX = L_PROM / 2
-ELSE IF L_RANGO_MAX = 'MITAD' THEN 
-    L_DEFAULT_MAX = L_PROM / 2
+IF L_RANGO_MIN = 'NO' THEN
+    L_DEFAULT_MIN = 0
+ELSE IF L_RANGO_MIN = 'R1' THEN
+    L_DEFAULT_MIN = L_VAL_R1
+ELSE IF L_RANGO_MIN = 'R1_MIN' THEN
+    L_DEFAULT_MIN = L_VAL_R1
+ELSE IF L_RANGO_MIN = 'R2' THEN
+    L_DEFAULT_MIN = L_VAL_R2
+ELSE IF L_RANGO_MIN = 'R3' THEN
+    L_DEFAULT_MIN = L_VAL_R3
+ELSE IF L_RANGO_MIN = 'R4' THEN
+    L_DEFAULT_MIN = L_VAL_R4
+ELSE IF L_RANGO_MIN = 'PROM' THEN
+    L_DEFAULT_MIN = L_PROM
+ELSE IF L_RANGO_MIN = 'HALF_PROM' THEN
+    L_DEFAULT_MIN = L_PROM / 2
+ELSE IF L_RANGO_MIN = 'MITAD' THEN 
+    L_DEFAULT_MIN = L_PROM / 2
 ELSE
-    L_DEFAULT_MAX = 0
+    L_DEFAULT_MIN = 0
 
 /*============================================================================
   APLICAR INFLACION MINIMA
 ============================================================================*/
-IF L_APLICA_INF = 'S' AND L_DEFAULT_MAX < L_INFLACION THEN
-    L_DEFAULT_MAX = L_INFLACION
+IF L_APLICA_INF = 'S' AND L_DEFAULT_MIN < L_INFLACION THEN
+    L_DEFAULT_MIN = L_INFLACION
 
-l_log = SET_LOG('*** RESULTADO MAX: ' || TO_CHAR(L_DEFAULT_MAX) || ' ***')
-RETURN L_DEFAULT_MAX
+l_log = SET_LOG('*** RESULTADO MIN: ' || TO_CHAR(L_DEFAULT_MIN) || ' ***')
+RETURN L_DEFAULT_MIN
