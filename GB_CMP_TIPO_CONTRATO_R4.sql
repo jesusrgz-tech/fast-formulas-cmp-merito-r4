@@ -1,5 +1,5 @@
 /******************************************************************************
-* FORMULA NAME      : GB_CMP_TIPO_CONTRATO_R1                                 *
+* FORMULA NAME      : GB_CMP_TIPO_CONTRATO_R4                               *
 * FORMULA TYPE      : Compensation Default and Override                       *
 * DESCRIPTION       : Retorna el tipo de contrato del colaborador.            *
 *                     1 = Permanente, 2 = No permanente.                      *
@@ -36,7 +36,9 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE)
     L_TIPO_CONTRATO = PER_ASG_ATTRIBUTE1
 )
 
-L_DEFAULT_VALUE = TO_NUMBER(L_TIPO_CONTRATO)
 
-l_log = SET_LOG('*** RESULTADO TIPO_CONTRATO: ' || TO_CHAR(L_DEFAULT_VALUE) || ' ***')
+
+    L_DEFAULT_VALUE = L_TIPO_CONTRATO
+
+l_log = SET_LOG('*** RESULTADO TIPO_CONTRATO: ' || (L_DEFAULT_VALUE) || ' ***')
 RETURN L_DEFAULT_VALUE

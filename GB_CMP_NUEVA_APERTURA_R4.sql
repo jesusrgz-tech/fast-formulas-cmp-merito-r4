@@ -1,5 +1,5 @@
 /*****************************************************************************
-FORMULA NAME: GB_CMP_NUEVA_APERTURA_R1
+FORMULA NAME: GB_CMP_NUEVA_APERTURA_R4
 CREATED_BY : IT-GLOBAL
 CREATION_DATE : 23 de Junio del 2026
 LAST_UPDATE_DATE : 23 de Junio del 2026
@@ -44,7 +44,10 @@ l_log = SET_LOG('Legal Employer: ' || L_LEGAL_EMPLOYER)
 l_log = SET_LOG('Grade ID: '       || TO_CHAR(L_GRADE))
 l_log = SET_LOG('Sueldo: '         || TO_CHAR(L_SUELDO))
 
-L_DIVISOR = 365
+IF L_LEGAL_EMPLOYER = 'Bimbo Morocco, S.A.R.L.A.U.' THEN
+    L_DIVISOR = 30
+ELSE
+    L_DIVISOR = 365
 
 l_log = SET_LOG('Divisor periodicidad: ' || TO_CHAR(L_DIVISOR))
 

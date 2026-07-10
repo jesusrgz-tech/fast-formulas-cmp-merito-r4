@@ -1,5 +1,5 @@
 /*****************************************************************************
-FORMULA NAME: GB_CMP_ELEGIBILIDAD_R1
+FORMULA NAME: GB_CMP_ELEGIBILIDAD_R4
 CREATED_BY : IT-GLOBAL
 CREATION_DATE : 07 de Abril del 2026
 LAST_UPDATE_DATE : 22 de Junio del 2026
@@ -22,7 +22,7 @@ L_CODE = 'N/A'
 
 ELIG_DATE = TO_DATE(CMP_IV_PLAN_ELIG_DATE, 'YYYY/MM/DD')
 
-l_log = SET_LOG('*** INICIO GB_CMP_ELEGIBILIDAD_R1 ***')
+l_log = SET_LOG('*** INICIO GB_CMP_ELEGIBILIDAD_R4 ***')
 
 CHANGE_CONTEXTS(EFFECTIVE_DATE = ELIG_DATE)
 (
@@ -68,6 +68,6 @@ IF MGR_LVL_NUM >= 4 AND L_CONTRATO_OK = 'Y' THEN
     ELIGIBLE = 'Y'
 
 l_log = SET_LOG('Resultado elegibilidad: ' || ELIGIBLE)
-l_log = SET_LOG('*** FIN GB_CMP_ELEGIBILIDAD_R1 ***')
+l_log = SET_LOG('*** FIN GB_CMP_ELEGIBILIDAD_R4 ***')
 
 RETURN ELIGIBLE

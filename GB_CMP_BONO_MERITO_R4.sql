@@ -1,6 +1,6 @@
 /******************************************************************************
 * *
-* FORMULA NAME      : GB_CMP_BONO_MERITO_R1                                   *
+* FORMULA NAME      : GB_CMP_BONO_MERITO_R4                                   *
 * FORMULA TYPE      : Compensation Default and Override                       *
 * DESCRIPTION       : Calcula el bono por merito para R4 (Espana, Portugal,  *
 *                     Marruecos). Aplica para niveles 4 y 5 con calificacion  *
@@ -83,8 +83,10 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE, COMPENSATION_RECORD_TYPE = 'CM
 
         IF L_EXT_VAL != 'N/A' THEN
         (
-                L_EVAL_MAPPED = GET_TABLE_VALUE('GB_CMP_LAC_LAS_CALIFICAC_MERITO', 'Calificacion_Texto', L_EXT_VAL)
-          
+            IF L_LANG = 'MAR' THEN
+                L_EVAL_MAPPED = GET_TABLE_VALUE('GB_CMP_MAR_CALIFICAC_MERITO', 'Calificacion_Texto', L_EXT_VAL)
+            ELSE
+                L_EVAL_MAPPED = GET_TABLE_VALUE('GB_CMP_CALIFICAC_MERITO', 'Calificacion_Texto', L_EXT_VAL)
 
             l_log = SET_LOG('Mapped: ' || L_EVAL_MAPPED)
 
@@ -104,9 +106,10 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE, COMPENSATION_RECORD_TYPE = 'CM
 l_log = SET_LOG('Evaluacion: ' || L_EVAL_TXT)
 
 /* ========== VALIDAR CALIFICACION EN UDT ========== */
-
-    L_APLICA_BONO = GET_TABLE_VALUE('GB_CMP_LAC_LAS_CALIF_BONO', 'Aplica_Bono', L_EVAL_TXT)
-
+IF L_LANG = 'MAR' THEN
+    L_APLICA_BONO = GET_TABLE_VALUE('GB_CMP_CALIF_BONO_MAR', 'Aplica_Bono', L_EVAL_TXT)
+ELSE
+    L_APLICA_BONO = GET_TABLE_VALUE('GB_CMP_ES_PT_CALIF_BONO', 'Aplica_Bono', L_EVAL_TXT)
 
 l_log = SET_LOG('Aplica Bono: ' || L_APLICA_BONO)
 
@@ -120,9 +123,10 @@ IF L_APLICA_BONO <> 'S' THEN
 /* ========== LEER DIAS DE BONO DEL UDT ========== */
 l_log = SET_LOG('Key UDT: [' || L_LEGAL_EMPLOYER || ']')
 
-
-    L_DIAS_BONO = TO_NUMBER(GET_TABLE_VALUE('GB_CMP_LAC_LAS_DIAS_BONO_BASE_EVALUACION', 'Calificacion', L_LEGAL_EMPLOYER))
-
+IF L_LANG = 'MAR' THEN
+    L_DIAS_BONO = TO_NUMBER(GET_TABLE_VALUE('GB_CMP_MAR_DIAS_BONO_BASE_EVALUACION_V2', 'Calificacion', L_LEGAL_EMPLOYER))
+ELSE
+    L_DIAS_BONO = TO_NUMBER(GET_TABLE_VALUE('GB_CMP_ES_PT_DIAS_BONO_BASE_EVALUACION', 'Calificacion', L_LEGAL_EMPLOYER))
 
 l_log = SET_LOG('Dias bono: ' || TO_CHAR(L_DIAS_BONO))
 
@@ -134,5 +138,5 @@ L_BONO = L_DIAS_BONO * L_SUELDO
 l_log = SET_LOG('Bono calculado: ' || TO_CHAR(L_BONO))
 
 L_DEFAULT_VALUE = L_BONO
-l_log = SET_LOG('*** RESULTADO GB_CMP_BONO_MERITO_R1: ' || TO_CHAR(L_DEFAULT_VALUE) || ' ***')
+l_log = SET_LOG('*** RESULTADO GB_CMP_BONO_MERITO_R4: ' || TO_CHAR(L_DEFAULT_VALUE) || ' ***')
 RETURN L_DEFAULT_VALUE
