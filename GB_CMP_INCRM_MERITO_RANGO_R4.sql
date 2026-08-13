@@ -10,7 +10,7 @@
 *----------------------------------------------------------------------------*
 * CREATED BY        : IT-GLOBAL                                              *
 * CREATION DATE     : 07-Abril-2026                                          *
-* LAST UPDATE DATE  : 22-Junio-2026                                          *
+* LAST UPDATE DATE  : 28-Julio-2026                                          *
 *----------------------------------------------------------------------------*
 * Change History:                                                            *
 * Author          | Date            | Ver | Comments                         *
@@ -23,6 +23,11 @@
 * IT Global       | 22-Junio-2026   |  6  | Sin external data mapea a        *
 *                 |                 |     | Exit/Salida segun pais;          *
 *                 |                 |     | eliminacion linea debug suelta   *
+* IT Global       | 28-Julio-2026   |  7  | Clave 'Promotion' restringida a  *
+*                 |                 |     | L_EVAL_TXT = Sobresaliente/      *
+*                 |                 |     | Outstanding; con otra califica-  *
+*                 |                 |     | cion, promocion toma su          *
+*                 |                 |     | evaluacion real                  *
 ******************************************************************************/
 
 INPUTS ARE CMP_IV_PLAN_START_DATE (text),
@@ -47,6 +52,7 @@ DEFAULT FOR PER_ASG_PERSON_ID IS 0
 DEFAULT FOR CMP_ASSIGNMENT_SALARY_AMOUNT IS 0
 DEFAULT FOR PER_ASG_ORG_LEGAL_EMPLOYER_NAME IS 'N/LE'
 DEFAULT FOR PER_ASG_DATE_START IS '1900/01/01' (date)
+DEFAULT FOR PER_ASG_REL_ORIGINAL_DATE_OF_HIRE IS '1901/01/01' (date)
 
 /*============================================================================
   FECHAS BASE
@@ -54,7 +60,6 @@ DEFAULT FOR PER_ASG_DATE_START IS '1900/01/01' (date)
 HR_EXTRACT_DATE = TO_DATE(CMP_IV_PLAN_EXTRACTION_DATE, 'YYYY/MM/DD')
 L_PL_END_DATE   = TO_DATE(CMP_IV_PLAN_END_DATE, 'YYYY/MM/DD')
 
-l_log = SET_LOG('*** INICIO GB_CMP_INCRM_MERITO_RANGO_R4 ***')
 L_ASG_ID = CMP_IVR_ASSIGNMENT_ID[1]
 l_log = SET_LOG('Assignment ID: ' || TO_CHAR(L_ASG_ID))
 
@@ -86,6 +91,7 @@ ELSE
     L_FECHA_CONTEXTO = HR_EXTRACT_DATE
 )
 
+
 l_log = SET_LOG('Fecha de contexto: ' || TO_CHAR(L_FECHA_CONTEXTO, 'YYYY/MM/DD'))
 
 IF L_LEGAL_EMPLOYER = 'Bimbo Morocco, S.A.R.L.A.U.' THEN
@@ -115,15 +121,16 @@ L_IDX         = 0
 CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE, COMPENSATION_RECORD_TYPE = 'CMP_MERITO')
 (
     L_IDX = CMP_EXTERNAL_WORKER_DATA_RGE_ASG_SEQUENCE_NUMBER.LAST(-1)
+    /*
     l_log = SET_LOG('Registros external data: ' || TO_CHAR(L_IDX))
-
+    */
     WHILE L_IDX >= 1 LOOP
     (
         L_EXT_VAL = CMP_EXTERNAL_WORKER_DATA_RGE_ASG_VALUE1[L_IDX]
         l_log = SET_LOG('EXT_VAL idx ' || TO_CHAR(L_IDX) || ': ' || L_EXT_VAL)
 
         IF L_EXT_VAL != 'N/A' THEN
-        (
+        ( 
             IF L_KEY_PAIS = 'MOR' THEN
                 L_EVAL_MAPPED = GET_TABLE_VALUE('GB_CMP_MAR_CALIFICAC_MERITO', 'Calificacion_Texto', L_EXT_VAL)
             ELSE
@@ -159,10 +166,8 @@ l_log = SET_LOG('Legal Employer: ' || L_LEGAL_EMPLOYER)
 l_log = SET_LOG('Grade ID: '       || TO_CHAR(L_GRADE))
 l_log = SET_LOG('Sueldo: '         || TO_CHAR(L_SUELDO))
 
-IF L_LEGAL_EMPLOYER = 'Bimbo Morocco, S.A.R.L.A.U.' THEN
-    L_DIVISOR = 30
-ELSE
-    L_DIVISOR = 365
+
+L_DIVISOR = 30
 
 l_log = SET_LOG('Divisor periodicidad: ' || TO_CHAR(L_DIVISOR))
 /*============================================================================
@@ -183,10 +188,14 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE)
 
 l_log = SET_LOG('Tipo contrato: ' || L_TIPO_CONTRATO)
 l_log = SET_LOG('Action code: '   || L_ACTION)
-l_log = SET_LOG('Hire Date: '     || TO_CHAR(L_HIRE_DATE, 'YYYY/MM/DD'))
+l_log = SET_LOG('Hire Date (asignacion actual): ' || TO_CHAR(L_HIRE_DATE, 'YYYY/MM/DD'))
+l_log = SET_LOG('Original Date of Hire: ' || TO_CHAR(PER_ASG_REL_ORIGINAL_DATE_OF_HIRE, 'YYYY/MM/DD'))
 l_log = SET_LOG('Grade ID: '      || TO_CHAR(L_GRADE))
 l_log = SET_LOG('Sueldo: '        || TO_CHAR(L_SUELDO))
+
+/*
 l_log = SET_LOG('Manager Level actual: ' || MGR_LVL)
+*/
 
 /*============================================================================
   CALCULO APERTURA
@@ -219,6 +228,7 @@ ELSE
     L_VALOR_PUNTO = (L_MAX - L_MIN) / L_DIVISOR
     L_APERTURA    = ((L_SUELDO - L_MIN) / L_VALOR_PUNTO) + 70
 )
+
 l_log = SET_LOG('Apertura calculada: ' || TO_CHAR(L_APERTURA))
 
 /*============================================================================
@@ -226,9 +236,6 @@ l_log = SET_LOG('Apertura calculada: ' || TO_CHAR(L_APERTURA))
 ============================================================================*/
 PROMOTION_START_DATE = ADD_MONTHS(L_PL_END_DATE, -5)
 PROMOTION_END_DATE   = HR_EXTRACT_DATE
-
-l_log = SET_LOG('Promotion Start Date: ' || TO_CHAR(PROMOTION_START_DATE, 'YYYY/MM/DD'))
-l_log = SET_LOG('Promotion End Date: '   || TO_CHAR(PROMOTION_END_DATE,   'YYYY/MM/DD'))
 
 LEVEL1       = 'NA'
 PRIOR_LEVEL  = 'NA'
@@ -281,10 +288,6 @@ IF LEVEL1 != 'NA' AND MGR_LVL != 'NA' THEN
 IF LEVEL_CHANGE = 'Y' THEN
     PRO = 'PRO'
 
-l_log = SET_LOG('Level previo (LEVEL1): ' || LEVEL1)
-l_log = SET_LOG('Level change: '          || LEVEL_CHANGE)
-l_log = SET_LOG('PRO flag: '              || PRO)
-
 /*============================================================================
   CONDICION
 ============================================================================*/
@@ -292,7 +295,7 @@ L_CINCO_MESES = ADD_MONTHS(L_PL_END_DATE, -5)
 
 IF PRO = 'PRO' THEN
     L_CONDICION = 'Promotion'
-ELSE IF L_HIRE_DATE >= L_CINCO_MESES AND (L_ACTION = 'HIRE' OR L_ACTION = 'ADD_ASSIGN') THEN
+ELSE IF PER_ASG_REL_ORIGINAL_DATE_OF_HIRE >= L_CINCO_MESES THEN
     L_CONDICION = 'NewHire'
 ELSE IF L_TIPO_CONTRATO = '2' THEN
     L_CONDICION = 'NonPerm'
@@ -301,10 +304,21 @@ ELSE
 
 l_log = SET_LOG('Condicion: ' || L_CONDICION)
 
+l_log = SET_LOG('Condicion previa a filtro de calificacion: ' || L_CONDICION || ' | Evaluacion: ' || L_EVAL_TXT)
+
 /*============================================================================
   CONSTRUCCION DE CLAVE UDT
+  NOTA: Promotion solo se respeta como clave si la calificacion es
+  Sobresaliente (ESP/PT) u Outstanding (MOR). Con cualquier otra
+  calificacion, el empleado promovido cae en la logica de evaluacion
+  normal (misma que 'None'), tal como si no tuviera promocion.
 ============================================================================*/
-IF L_CONDICION = 'Promotion' THEN
+IF L_CONDICION = 'Promotion' AND (
+        L_EVAL_TXT = 'Sobresaliente' OR
+        L_EVAL_TXT = 'Supera' OR
+        L_EVAL_TXT = 'Cumple con lo esperado' OR
+        L_EVAL_TXT = 'Outstanding'
+    ) THEN
     L_CLAVE = 'Promotion'
 ELSE IF L_CONDICION = 'NonPerm' THEN
     L_CLAVE = 'NonPerm'

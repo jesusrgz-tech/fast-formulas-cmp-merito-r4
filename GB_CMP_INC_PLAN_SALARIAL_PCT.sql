@@ -44,7 +44,7 @@ IF L_LEGAL_EMPLOYER = 'Bimbo Morocco, S.A.R.L.A.U.' THEN
 ELSE IF L_LEGAL_EMPLOYER = 'Bimbo Donuts Portugal, LDA' THEN
     L_KEY_UDT = 'PT'
 ELSE
-    L_KEY_UDT = 'ES'
+    L_KEY_UDT = 'ESP'
 
 l_log = SET_LOG('Key UDT: ' || L_KEY_UDT)
 

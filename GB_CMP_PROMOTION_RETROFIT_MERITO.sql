@@ -33,6 +33,7 @@ LEVEL_CHANGE = 'N'
 PL_START_DATE = CMP_IV_PLAN_START_DATE
 PL_END_DATE = CMP_IV_PLAN_END_DATE
 HR_EXTRACT_DATE = CMP_IV_PLAN_EXTRACTION_DATE
+
  
 /* Nueva lógica para periodo automático de promociones */
 /* PROMOTION_START_DATE = ADD_MONTHS(PL_START_DATE, 12) */ /* 12 meses después del inicio del periodo */

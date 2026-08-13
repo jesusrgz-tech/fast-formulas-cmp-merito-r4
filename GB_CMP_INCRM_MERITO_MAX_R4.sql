@@ -45,6 +45,7 @@ DEFAULT FOR PER_ASG_GRADE_ID IS 123
 DEFAULT FOR PER_ASG_PERSON_ID IS 0
 DEFAULT FOR CMP_ASSIGNMENT_SALARY_AMOUNT IS 0
 DEFAULT FOR PER_ASG_ORG_LEGAL_EMPLOYER_NAME IS 'N/LE'
+DEFAULT FOR PER_ASG_REL_ORIGINAL_DATE_OF_HIRE IS '1901/01/01' (date)
 
 /*============================================================================
   FECHAS BASE
@@ -152,10 +153,7 @@ l_log = SET_LOG('Legal Employer: ' || L_LEGAL_EMPLOYER)
 l_log = SET_LOG('Grade ID: '       || TO_CHAR(L_GRADE))
 l_log = SET_LOG('Sueldo: '         || TO_CHAR(L_SUELDO))
 
-IF L_LEGAL_EMPLOYER = 'Bimbo Morocco, S.A.R.L.A.U.' THEN
-    L_DIVISOR = 30
-ELSE
-    L_DIVISOR = 365
+L_DIVISOR = 30
 
 l_log = SET_LOG('Divisor periodicidad: ' || TO_CHAR(L_DIVISOR))
 
@@ -178,7 +176,8 @@ CHANGE_CONTEXTS(EFFECTIVE_DATE = HR_EXTRACT_DATE)
 
 l_log = SET_LOG('Tipo contrato: '        || L_TIPO_CONTRATO)
 l_log = SET_LOG('Action code: '          || L_ACTION)
-l_log = SET_LOG('Hire Date: '            || TO_CHAR(L_HIRE_DATE, 'YYYY/MM/DD'))
+l_log = SET_LOG('Hire Date (asignacion actual): ' || TO_CHAR(L_HIRE_DATE, 'YYYY/MM/DD'))
+l_log = SET_LOG('Original Date of Hire: ' || TO_CHAR(PER_ASG_REL_ORIGINAL_DATE_OF_HIRE, 'YYYY/MM/DD'))
 l_log = SET_LOG('Grade ID: '             || TO_CHAR(L_GRADE))
 l_log = SET_LOG('Sueldo: '               || TO_CHAR(L_SUELDO))
 l_log = SET_LOG('Manager Level Actual: ' || MGR_LVL)
@@ -287,19 +286,23 @@ L_CINCO_MESES = ADD_MONTHS(L_PL_END_DATE, -5)
 
 IF PRO = 'PRO' THEN
     L_CONDICION = 'Promotion'
-ELSE IF L_HIRE_DATE >= L_CINCO_MESES AND (L_ACTION = 'HIRE' OR L_ACTION = 'ADD_ASSIGN') THEN
+ELSE IF PER_ASG_REL_ORIGINAL_DATE_OF_HIRE >= L_CINCO_MESES THEN
     L_CONDICION = 'NewHire'
 ELSE IF L_TIPO_CONTRATO = '2' THEN
     L_CONDICION = 'NonPerm'
 ELSE
     L_CONDICION = 'None'
-
 l_log = SET_LOG('Condicion: ' || L_CONDICION)
 
 /*============================================================================
   CONSTRUCCION DE CLAVE UDT
 ============================================================================*/
-IF L_CONDICION = 'Promotion' THEN
+IF L_CONDICION = 'Promotion' AND (
+        L_EVAL_TXT = 'Sobresaliente' OR
+        L_EVAL_TXT = 'Supera' OR
+        L_EVAL_TXT = 'Cumple con lo esperado' OR
+        L_EVAL_TXT = 'Outstanding'
+    ) THEN
     L_CLAVE = 'Promotion'
 ELSE IF L_CONDICION = 'NonPerm' THEN
     L_CLAVE = 'NonPerm'

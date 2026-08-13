@@ -44,7 +44,6 @@ L_CTX_ASG = GET_CONTEXT(HR_ASSIGNMENT_ID, -1)
 l_log = SET_LOG('Assignment ID segun contexto interno (HR_ASSIGNMENT_ID): ' || TO_CHAR(L_CTX_ASG))
 l_log = SET_LOG('Assignment ID segun input CMP_IVR: ' || TO_CHAR(L_ASG_ID))
 /*=== FIN DIAGNOSTICO NUEVO ===*/
-
 IF HR_EXTRACT_DATE > HR_PLAN_END_DATE THEN
 (
     L_FECHA_CONTEXTO = HR_PLAN_END_DATE
