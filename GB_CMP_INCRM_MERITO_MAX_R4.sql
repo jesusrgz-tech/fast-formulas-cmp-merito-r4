@@ -46,6 +46,10 @@ DEFAULT FOR PER_ASG_PERSON_ID IS 0
 DEFAULT FOR CMP_ASSIGNMENT_SALARY_AMOUNT IS 0
 DEFAULT FOR PER_ASG_ORG_LEGAL_EMPLOYER_NAME IS 'N/LE'
 DEFAULT FOR PER_ASG_REL_ORIGINAL_DATE_OF_HIRE IS '1901/01/01' (date)
+DEFAULT FOR PER_ASG_ACTION_REASON_CODE IS 'N/A'
+DEFAULT_DATA_VALUE FOR PER_HIST_ASG_EFFECTIVE_START_DATE IS '1900/01/01' (date)
+DEFAULT_DATA_VALUE FOR PER_HIST_ASG_EFFECTIVE_END_DATE IS '4712/12/31' (date)
+DEFAULT_DATA_VALUE FOR PER_HIST_ASG_ASSIGNMENT_ID IS 0
 
 /*============================================================================
   FECHAS BASE
@@ -279,6 +283,58 @@ l_log = SET_LOG('Level previo (LEVEL1): ' || LEVEL1)
 l_log = SET_LOG('Level change: '          || LEVEL_CHANGE)
 l_log = SET_LOG('PRO flag: '              || PRO)
 
+
+/*============================================================================
+  DETECCION DE TRANSFERENCIA INTERCOMPANIA
+  Misma logica validada en GB_CMP_NEW_HIRE_RETROFIT v11.
+============================================================================*/
+L_ES_INTERCOMPANIA = 'N'
+
+IF PER_ASG_REL_ORIGINAL_DATE_OF_HIRE >= PROMOTION_START_DATE THEN
+(
+    L_DIA_ANT_HIRE = ADD_DAYS(L_HIRE_DATE, -1)
+    L_ASG_ANT = 0
+    L_TOTAL_HIST = PER_HIST_ASG_EFFECTIVE_START_DATE.LAST(-1)
+    L_H = L_TOTAL_HIST
+    WHILE L_H >= 1 LOOP
+    (
+        L_H_INICIO = PER_HIST_ASG_EFFECTIVE_START_DATE[L_H]
+        L_H_FIN = PER_HIST_ASG_EFFECTIVE_END_DATE[L_H]
+        L_H_ASG = PER_HIST_ASG_ASSIGNMENT_ID[L_H]
+
+        IF L_H_ASG <> L_CTX_ASG AND L_DIA_ANT_HIRE >= L_H_INICIO AND L_DIA_ANT_HIRE <= L_H_FIN AND L_ASG_ANT = 0 THEN
+        (
+            L_ASG_ANT = L_H_ASG
+            L_H = 0
+        )
+        ELSE
+            L_H = L_H - 1
+    )
+
+    IF L_ASG_ANT <> 0 THEN
+    (
+        L_RC = 'N/A'
+        CHANGE_CONTEXTS(HR_ASSIGNMENT_ID = L_ASG_ANT, EFFECTIVE_DATE = L_HIRE_DATE)
+        (
+            L_RC = PER_ASG_ACTION_REASON_CODE
+        )
+        l_log = SET_LOG('Reason code assignment anterior: ' || L_RC)
+
+        IF L_RC = '28'
+        OR L_RC = '098'
+        OR L_RC = 'ES098'
+        OR L_RC = 'ES98'
+        OR L_RC = 'BUK_30'
+        OR L_RC = 'INTERNREC'
+        OR L_RC = 'REORG'
+        OR L_RC = 'WORKERREQ'
+        THEN
+            L_ES_INTERCOMPANIA = 'Y'
+    )
+)
+
+l_log = SET_LOG('Es intercompania: ' || L_ES_INTERCOMPANIA)
+
 /*============================================================================
   CONDICION
 ============================================================================*/
@@ -286,8 +342,14 @@ L_CINCO_MESES = ADD_MONTHS(L_PL_END_DATE, -5)
 
 IF PRO = 'PRO' THEN
     L_CONDICION = 'Promotion'
-ELSE IF PER_ASG_REL_ORIGINAL_DATE_OF_HIRE >= L_CINCO_MESES THEN
+
+
+
+ELSE IF PER_ASG_REL_ORIGINAL_DATE_OF_HIRE >= L_CINCO_MESES 
+AND L_ES_INTERCOMPANIA = 'N' THEN
     L_CONDICION = 'NewHire'
+
+
 ELSE IF L_TIPO_CONTRATO = '2' THEN
     L_CONDICION = 'NonPerm'
 ELSE
